@@ -2,18 +2,17 @@ import socket
 import sys
 import random
 import string
+import os
 
-HOST = "127.0.0.1"
-PORT = 65432
-USER_PATH = "./Users.txt"
+USER_PATH = "./Users"
 
 def start_server(port, host):
     HOST = host
     PORT = port
 
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind((HOST, PORT))
-        s.listen(5)
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind((HOST, PORT))
+    s.listen(5)
 
     return s
 
@@ -23,7 +22,10 @@ def get_new_user_code(num):
 
 
 def add_new_user(path):
-    mode = 'a' if os.path.exists(USER_PATH + "/users.txt") else 'w'
+    mode = 'w'
+    open(USER_PATH + "/users.txt", 'a')
+    if os.path.exists(USER_PATH + "/users.txt"):
+        mode = 'a'
     with open(USER_PATH + "/users.txt", mode) as f:
         user_code = get_new_user_code(128)
         while (check_if_user_exist(user_code)):
@@ -65,13 +67,13 @@ def copy_files_from_user(user_code, connection) :
     data = connection.recv(1024)
     data = data.decode('utf-8')
 
-    while(data != "finished") {
+    while(data != "finished") :
         command = data.split(":", 1)[0]
-        if (command = "create folder"):
+        if (command == "create folder"):
             path = data.split(":", 1)[1]
             create_folder(user_code, path)
 
-        if (command = "create file") :
+        if (command == "create file") :
             path = data.split(":", 1)[1]
             create_file(user_code, path)
             data = connection.recv(1024)
@@ -108,6 +110,7 @@ def send_file(user_code, connection, path):
 
 
 def get_command(connection):
+    print("here")
     data = connection.recv(1024)
     data = data.decode("utf-8")
     command = data.split(":", 1)[0]
@@ -115,7 +118,7 @@ def get_command(connection):
         path = data.split(":", 1)[1]
         user_code = add_new_user(path)
         copy_files_from_user(user_code, connection)
-    if (command = "old user") :
+    if (command == "old user") :
         user_code = data.split(":")[1]
         command = data.split(":")[2]
         if (command == "add new folder") :
@@ -142,7 +145,7 @@ def get_command(connection):
 
 
 if __name__ == "__main__":
-    s = start_server(int(sys.argv[1]),"");
+    s = start_server(int(sys.argv[1]),sys.argv[2]);
     while True:
         conn, addr = s.accept()
         get_command(conn)
