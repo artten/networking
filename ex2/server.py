@@ -30,7 +30,7 @@ def add_new_user(path):
         user_code = get_new_user_code(128)
         while (check_if_user_exist(user_code)):
             user_code = get_new_user_code(128)
-        f.write(user_code + "-" + path + "\n")
+        f.write(user_code + "\n")
     return user_code
 
 
@@ -39,11 +39,13 @@ def create_folder(user_code, path):
 
 
 def create_file(user_code, path):
-    open(USER_PATH + "/" + user_code + "/" + path, "w")
-
-def append_data_to_file(user_code, path, data):
     if os.path.exists(USER_PATH + "/" + user_code + "/" + path):
         os.remove(USER_PATH + "/" + user_code + "/" + path)
+    f = open(USER_PATH + "/" + user_code + "/" + path, "w")
+    f.close()
+
+
+def append_data_to_file(user_code, path, data):
     f = open(USER_PATH + "/" + user_code + "/" + path, "a")
     f.write(data)
     f.close()
@@ -63,16 +65,14 @@ def copy_files_from_user(user_code, connection) :
     if not os.path.exists(USER_PATH):
         os.makedirs(USER_PATH)
     if not os.path.exists(USER_PATH + user_code):
-        os.makedirs(USER_PATH + user_code)
+        os.makedirs(USER_PATH + "/" +user_code)
     data = connection.recv(1024)
     data = data.decode('utf-8')
-
     while(data != "finished") :
         command = data.split(":", 1)[0]
         if (command == "create folder"):
             path = data.split(":", 1)[1]
             create_folder(user_code, path)
-
         if (command == "create file") :
             path = data.split(":", 1)[1]
             create_file(user_code, path)
@@ -106,11 +106,10 @@ def send_file(user_code, connection, path):
     while data:
         connection.send(data)
         data = infile.read(1024)
-    connection.send("Enf Of File".encode('utf-8'))
+    connection.send("End of File".encode('utf-8'))
 
 
 def get_command(connection):
-    print("here")
     data = connection.recv(1024)
     data = data.decode("utf-8")
     command = data.split(":", 1)[0]
@@ -118,6 +117,7 @@ def get_command(connection):
         path = data.split(":", 1)[1]
         user_code = add_new_user(path)
         copy_files_from_user(user_code, connection)
+        connection.close()
     if (command == "old user") :
         user_code = data.split(":")[1]
         command = data.split(":")[2]
