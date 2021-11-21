@@ -1,0 +1,6 @@
+server line 120: why close connection
+server line 116: need to update the user with its user code
+server line 108: f.read?
+import watchdog
+argv[1] in client is both ip and port?
+add delete?
