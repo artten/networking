@@ -6,12 +6,12 @@ import os
 
 USER_PATH = "./Users"
 
-def start_server(port, host):
+def start_server(port):
     HOST = host
     PORT = port
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind((HOST, PORT))
+    s.bind(('', PORT))
     s.listen(5)
 
     return s
@@ -105,7 +105,7 @@ def send_file(user_code, connection, path):
     data = f.read(1024)
     while data:
         connection.send(data)
-        data = infile.read(1024)
+        data = f.read(1024)
     connection.send("End of File".encode('utf-8'))
 
 
@@ -145,7 +145,7 @@ def get_command(connection):
 
 
 if __name__ == "__main__":
-    s = start_server(int(sys.argv[1]),sys.argv[2]);
+    s = start_server(int(sys.argv[1])]);
     while True:
         conn, addr = s.accept()
         get_command(conn)
