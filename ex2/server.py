@@ -92,9 +92,10 @@ def send_all_files_of_user(user_code, connection):
         for currentpath, folders, files in os.walk(USER_PATH + "/" + user_code):
             path = currentpath.split(user_code + "/")[1]
             for file in files:
-                connection.send("file:".encode('utf-8') + (path + file).encode('utf-8'))
+                connection.send("file:".encode('utf-8') + (path + "/" + file).encode('utf-8'))
+                send_file(user_code, connect, path + "/" + file)
             for folder in folders:
-                connection.send("directory:".encode('utf-8') + (path + folder).encode('utf-8'))
+                connection.send("directory:".encode('utf-8') + (path + "/" + folder).encode('utf-8'))
         connection.send("all files sended".encode('utf-8'))
     else :
      print("no such user")
@@ -136,12 +137,6 @@ def get_command(connection):
         if (command == "sync") :
             user_code = data.split(":")[2]
             send_all_files_of_user(user_code, connection)
-            data = connection.recv(1024)
-            data = data.decode('utf-8')
-            while data != "all synced" :
-                send_file(user_code, connection, data)
-                data = connection.recv(1024)
-                data = data.decode('utf-8')
 
 
 if __name__ == "__main__":
