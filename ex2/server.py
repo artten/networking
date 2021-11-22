@@ -109,6 +109,12 @@ def send_file(user_code, connection, path):
         data = f.read(1024)
     connection.send("End of File".encode('utf-8'))
 
+def delete_folder(user_code, path):
+    os.rmdir(USER_PATH + "/" + user_code + "/" + path)
+
+def delete_file(user_code, path):
+    os.remove(USER_PATH + "/" + user_code + "/" + path)
+
 
 def get_command(connection):
     data = connection.recv(1024)
@@ -122,9 +128,11 @@ def get_command(connection):
     if (command == "old user") :
         user_code = data.split(":")[1]
         command = data.split(":")[2]
+
         if (command == "add new folder") :
             path = data.split(":")[3]
             create_folder(user_code, path)
+
         if (command == "write to file") :
             path = data.split(":")[3]
             create_file(user_code, path)
@@ -134,6 +142,15 @@ def get_command(connection):
                 append_data_to_file(user_code, path, data)
                 data = connection.recv(1024)
                 data = data.decode('utf-8')
+
+        if (command == "delete file"):
+            path = data.split(":")[3]
+            delete_file(user_code, path)
+
+        if (command == "delete folder"):
+            path = data.split(":")[3]
+            delete_folder(user_code, path)
+
         if (command == "sync") :
             user_code = data.split(":")[2]
             send_all_files_of_user(user_code, connection)
