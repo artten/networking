@@ -10,6 +10,42 @@ from watchdog.events import FileSystemEventHandler, PatternMatchingEventHandler
 PATH = (sys.argv[3])
 
 
+class MyEventHandler(FileSystemEventHandler):
+    def dispatch(self, event):
+        event.on_moved()
+        if event.event_type == "created":
+            self.on_created(event)
+        if event.event_type == "modified":
+            self.on_modified(event)
+        if event.event_type == "deleted":
+            self.on_deleted(event)
+        if event.event_type == "moved":
+            self.on_moved(event)
+
+    def on_created(self, event):
+        if event.is_directory:
+             send_data(event.src_path, ":add new folder:")
+        else:
+            send_data(event.src_path, ":write to file:")
+            send_file_data(event.src_path)
+
+    def on_deleted(self, event):
+        send_data(event.src_path, ":delete:")
+
+    def on_modified(self, event):
+        if event.is_directory:
+            send_data(event.src_path, ":add new folder:")
+        else:
+            send_data(event.src_path, ":write to file:")
+            send_file_data(event.src_path)
+
+    def on_moved(self, event):
+        send_data(event.src_path, ":delete:")
+        if event.is_directory:
+            send_data(event.dest_path, ":add new folder:")
+        else:
+            send_data(event.dest_path, ":write to file:")
+            send_file_data(event.dest_path)
 
 
 def start_client(ip, port):
@@ -20,14 +56,17 @@ def start_client(ip, port):
     s.connect((HOST_IP, PORT))
     return s
 
+
 def create_folder(path):
     os.makedirs(PATH + "/" + path)
 
-def create_file(user_code, path):
+
+def create_file(path):
     if os.path.exists(PATH + "/" + path):
         os.remove(PATH + "/" + path)
     f = open(PATH + "/" + path, "w")
     f.close()
+
 
 def append_data_to_file(path, data):
     f = open(PATH + "/" + path, "a")
@@ -48,6 +87,7 @@ def sync_new_user(s):
     code = s.recv(1024)
     return code.decode('utf-8')
 
+
 def sync_old_user(s, user_code):
     s.send("old user:sync:".encode('utf-8') + user_code.encode('utf-8') + ":sync:".encode('utf-8'))
     if not os.path.exists(PATH):
@@ -59,11 +99,11 @@ def sync_old_user(s, user_code):
             create_folder(user_code, path)
         if (command == "file") :
             path = data.split(":", 1)[1]
-            create_file(user_code, path)
+            create_file(path)
             data = s.recv(1024)
             data = data.decode('utf-8')
             while  (data != "End of File"):
-                append_data_to_file(user_code, path, data)
+                append_data_to_file(path, data)
                 data = s.recv(1024)
                 data = data.decode('utf-8')
 
@@ -71,29 +111,6 @@ def sync_old_user(s, user_code):
         data = data.decode('utf-8')
 
 
-def on_created(event):
-    s.send(user_code.encode('utf-8') + event.src_path.encode('utf-8'))
-    if event.is_directory:
-        # send_directory(event.src_path)
-        send_data(event.src_path, ":add new folder:")
-    else:
-        # send_file(event.src_path)
-        send_data(event.src_path, ":write to file:")
-
-
-# def on_deleted(event):
-
-
-def on_modified(event):
-    s.send(user_code.encode('utf-8') + event.src_path.encode('utf-8'))
-    if event.is_directory:
-        # send_directory(event.src_path)
-        send_data(event.src_path, ":add new folder:")
-    else:
-        # send_file(event.src_path)
-        send_data(event.src_path, ":write to file:")
-
-# def on_moved(event):
 
 
 def send_data(path, command):
@@ -112,9 +129,17 @@ def send_directory(path):
     s.send("old user:".encode('utf-8') + user_code.encode('utf-8') + ":add new folder:".encode('utf-8') + p.encode('utf-8'))
 
 
+def send_file_data(path):
+    f = open(path, "w")
+    data = f.read(1024)
+    while data:
+        s.send(data)
+        data = f.read(1024)
+    s.send("End of File".encode('utf-8'))
+
 if __name__ == "__main__":
     s = start_client(int(sys.argv[1]), sys.argv[2])
-    my_event_handler = PatternMatchingEventHandler("*", "", False, True)
+    my_event_handler = MyEventHandler()
 
     if len(sys.argv) <= 5:
         user_code = sync_new_user(s)
