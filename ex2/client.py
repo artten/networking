@@ -139,7 +139,7 @@ def send_file_data(path):
 
 if __name__ == "__main__":
     s = start_client(int(sys.argv[1]), sys.argv[2])
-    my_event_handler = PatternMatchingEventHandler("*", "", False, True)
+    my_event_handler = MyEventHandler()
 
     if len(sys.argv) <= 5:
         user_code = sync_new_user(s)
