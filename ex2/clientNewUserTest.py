@@ -11,7 +11,7 @@ if __name__ == "__main__":
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT))
-        s.sendall(bytes(sys.argv[1],'UTF-8'))
+        s.sendall(bytes("new user:./", "utf-8"))
         time.sleep(1)
         s.sendall(bytes("create folder:client",'utf-8'))
         time.sleep(1)

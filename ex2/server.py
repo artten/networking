@@ -7,7 +7,6 @@ import os
 USER_PATH = "./Users"
 
 def start_server(port):
-    HOST = host
     PORT = port
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -35,7 +34,8 @@ def add_new_user(path):
 
 
 def create_folder(user_code, path):
-    os.makedirs(USER_PATH + "/" + user_code + "/" + path)
+    if not os.path.exists(USER_PATH + "/" + user_code + "/" + path):
+        os.makedirs(USER_PATH + "/" + user_code + "/" + path)
 
 
 def create_file(user_code, path):
@@ -128,6 +128,7 @@ def get_command(connection):
     if (command == "old user") :
         user_code = data.split(":")[1]
         command = data.split(":")[2]
+        print(command)
 
         if (command == "add new folder") :
             path = data.split(":")[3]
@@ -152,12 +153,11 @@ def get_command(connection):
             delete_folder(user_code, path)
 
         if (command == "sync") :
-            user_code = data.split(":")[2]
             send_all_files_of_user(user_code, connection)
 
 
 if __name__ == "__main__":
-    s = start_server(int(sys.argv[1])]);
+    s = start_server(int(sys.argv[1]));
     while True:
         conn, addr = s.accept()
         get_command(conn)
