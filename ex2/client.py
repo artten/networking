@@ -30,7 +30,12 @@ class MyEventHandler(FileSystemEventHandler):
             send_file_data(event.src_path)
 
     def on_deleted(self, event):
-        send_data(event.src_path, ":delete:")
+        if event.is_directory:
+            send_data(event.src_path, ":delete folder:")
+        else:
+            send_data(event.src_path, ":delete file:")
+
+
 
     def on_modified(self, event):
         if event.is_directory:
@@ -40,10 +45,11 @@ class MyEventHandler(FileSystemEventHandler):
             send_file_data(event.src_path)
 
     def on_moved(self, event):
-        send_data(event.src_path, ":delete:")
         if event.is_directory:
+            send_data(event.src_path, ":delete folder:")
             send_data(event.dest_path, ":add new folder:")
         else:
+            send_data(event.src_path, ":delete file:")
             send_data(event.dest_path, ":write to file:")
             send_file_data(event.dest_path)
 
