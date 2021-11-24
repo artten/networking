@@ -3,6 +3,7 @@ import sys
 import random
 import string
 import os
+import time
 
 USER_PATH = "./Users"
 
@@ -55,7 +56,7 @@ def append_data_to_file(user_code, path, data):
 def check_if_user_exist(user_code):
     with open(USER_PATH + "/users.txt", "r") as users:
         for line in users:
-             if(user_code == line.split("-")[0]):
+            if(user_code == line.split("\n")[0]):
                 return 1
         users.close()
     return 0
@@ -89,25 +90,33 @@ def copy_files_from_user(user_code, connection) :
 
 def send_all_files_of_user(user_code, connection):
     if (check_if_user_exist(user_code)) :
-        for currentpath, folders, files in os.walk(USER_PATH + "/" + user_code):
-            path = currentpath.split(user_code + "/")[1]
+        for currentpath, folders, files in os.walk(USER_PATH + "/" + user_code + "/"):
+            try:
+                path = currentpath.split(user_code + "/")[1]
+            except:
+                path = ""
             for file in files:
-                connection.send("file:".encode('utf-8') + (path + "/" + file).encode('utf-8'))
-                send_file(user_code, connect, path + "/" + file)
+                connection.sendall("file:".encode('utf-8') + (path + "/" + file).encode('utf-8'))
+                time.sleep(1)
+                send_file(user_code, connection,currentpath + "/" + file)
             for folder in folders:
-                connection.send("directory:".encode('utf-8') + (path + "/" + folder).encode('utf-8'))
+                connection.send("directory:".encode('utf-8') + (path + folder).encode('utf-8'))
+                time.sleep(1)
         connection.send("all files sended".encode('utf-8'))
+        time.sleep(1)
     else :
      print("no such user")
 
 
 def send_file(user_code, connection, path):
-    f = open(USER_PATH + user_code + path, "w")
+    f = open(path, "r")
     data = f.read(1024)
     while data:
-        connection.send(data)
+        connection.sendall(bytes(data,"utf-8"))
+        time.sleep(1)
         data = f.read(1024)
-    connection.send("End of File".encode('utf-8'))
+    connection.send(bytes("End of File","utf-8"))
+    time.sleep(1)
 
 def delete_folder(user_code, path):
     os.rmdir(USER_PATH + "/" + user_code + "/" + path)
@@ -120,6 +129,7 @@ def get_command(connection):
     data = connection.recv(1024)
     data = data.decode("utf-8")
     command = data.split(":", 1)[0]
+    print(command)
     if (command == "new user") :
         path = data.split(":", 1)[1]
         user_code = add_new_user(path)
@@ -128,8 +138,6 @@ def get_command(connection):
     if (command == "old user") :
         user_code = data.split(":")[1]
         command = data.split(":")[2]
-        print(command)
-
         if (command == "add new folder") :
             path = data.split(":")[3]
             create_folder(user_code, path)
