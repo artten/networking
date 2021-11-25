@@ -88,6 +88,14 @@ def copy_files_from_user(user_code, connection) :
         data = data.decode('utf-8')
 
 
+def get_date_of_file(path):
+    modified = time.ctime(os.path.getmtime(path)).split(" ")
+
+    return modified[4] + str(time.strptime(modified[1],'%b').tm_mon) +
+     modified[2] + modified[3].split(":")[0]
+     + modified[3].split(":")[1] + modified[3].split(":")[2]
+
+
 def send_all_files_of_user(user_code, connection):
     if (check_if_user_exist(user_code)) :
         for currentpath, folders, files in os.walk(USER_PATH + "/" + user_code + "/"):
@@ -96,9 +104,10 @@ def send_all_files_of_user(user_code, connection):
             except:
                 path = ""
             for file in files:
-                connection.sendall("file:".encode('utf-8') + (path + "/" + file).encode('utf-8'))
+                connection.sendall("file:".encode('utf-8')
+                + (path + "/" + file).encode('utf-8') + (":"
+                + get_date_of_file(path + "/" + file)).encode('utf-8'))
                 time.sleep(1)
-                send_file(user_code, connection,currentpath + "/" + file)
             for folder in folders:
                 connection.send("directory:".encode('utf-8') + (path + folder).encode('utf-8'))
                 time.sleep(1)
@@ -162,6 +171,10 @@ def get_command(connection):
 
         if (command == "sync") :
             send_all_files_of_user(user_code, connection)
+            data = connection.recv(1024)
+            data = data.decode('utf-8')
+            while (data == "all updated") :
+
 
 
 if __name__ == "__main__":
