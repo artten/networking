@@ -30,12 +30,7 @@ class MyEventHandler(FileSystemEventHandler):
             send_file_data(event.src_path)
 
     def on_deleted(self, event):
-        if event.is_directory:
-            send_data(event.src_path, ":delete folder:")
-        else:
-            send_data(event.src_path, ":delete file:")
-
-
+        send_data(event.src_path, ":delete:")
 
     def on_modified(self, event):
         if event.is_directory:
@@ -45,11 +40,10 @@ class MyEventHandler(FileSystemEventHandler):
             send_file_data(event.src_path)
 
     def on_moved(self, event):
+        send_data(event.src_path, ":delete:")
         if event.is_directory:
-            send_data(event.src_path, ":delete folder:")
             send_data(event.dest_path, ":add new folder:")
         else:
-            send_data(event.src_path, ":delete file:")
             send_data(event.dest_path, ":write to file:")
             send_file_data(event.dest_path)
 
@@ -143,22 +137,92 @@ def send_file_data(path):
         data = f.read(1024)
     s.send("End of File".encode('utf-8'))
 
+
+def get_date_of_file(path):
+    modified = time.ctime(os.path.getmtime(path)).split(" ")
+
+    return modified[4] + str(time.strptime(modified[1],'%b').tm_mon) + modified[2] + modified[3].split(":")[0]
+    + modified[3].split(":")[1] + modified[3].split(":")[2]
+
+
+def check_for_updates():
+    fileAndDirList = []
+    for currentpath, folders, files in os.walk(PATH):
+        for file in files:
+            fileAndDirList.insert(currentpath + file)
+        for folder in folders:
+            fileAndDirList.insert(currentpath + folder)
+
+    s.send("old user:sync:".encode('utf-8') + user_code.encode('utf-8') + ":sync:".encode('utf-8'))
+    if not os.path.exists(PATH):
+        os.makedirs(PATH)
+    while (data != "all files sended"):
+        command = data.split(":", 1)[0]
+        if (command == "directory"):
+            path = data.split(":", 1)[1]
+            if not os.path.exists(PATH + "/" + path):
+                create_folder(user_code, path)
+            else:
+                fileAndDirList.remove(PATH + "/" + path)
+
+        if (command == "file"):
+            path = data.split(":", 1)[1]
+            date = data.split(":", 1)[2]
+            update = False
+
+            if os.path.exists(PATH + "/" + path):
+                fileAndDirList.remove(PATH + "/" + path)
+                if date > get_date_of_file(PATH + "/" + path):
+                    update = True
+            else:
+                update = True
+            if update:
+                path = data.split(":", 1)[1]
+                create_file(path)
+                data = s.recv(1024)
+                data = data.decode('utf-8')
+                while (data != "End of File"):
+                    append_data_to_file(path, data)
+                    data = s.recv(1024)
+                    data = data.decode('utf-8')
+            else:
+                while (data != "End of File"):
+                    data = s.recv(1024)
+                    data = data.decode('utf-8')
+
+        data = s.recv(1024)
+        data = data.decode('utf-8')
+
+    remove_deleted(fileAndDirList)
+
+
+def remove_deleted(filesAndDirs):
+    for path in filesAndDirs:
+        if os.path.isdir(path):
+            os.rmdir(path)
+        else:
+            os.remove(path)
+
+
 if __name__ == "__main__":
     s = start_client(int(sys.argv[1]), sys.argv[2])
-    my_event_handler = MyEventHandler()
+    my_event_handler = PatternMatchingEventHandler("*", "", False, True)
+    sleepTime = int(sys.argv[4])
 
     if len(sys.argv) <= 5:
         user_code = sync_new_user(s)
     else:
         user_code = sys.argv[5]
         sync_old_user(s, user_code)
+    s.close()
 
     observer = Observer()
     observer.schedule(my_event_handler, PATH, recursive=True)
     observer.start()
     try:
         while True:
-            time.sleep(1)
+            time.sleep(sleepTime)
+            check_for_updates()
     except KeyboardInterrupt:
         observer.stop()
     observer.join()
