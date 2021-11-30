@@ -91,9 +91,7 @@ def copy_files_from_user(user_code, connection) :
 def get_date_of_file(path):
     modified = time.ctime(os.path.getmtime(path)).split(" ")
 
-    return modified[4] + str(time.strptime(modified[1],'%b').tm_mon) +
-     modified[2] + modified[3].split(":")[0]
-     + modified[3].split(":")[1] + modified[3].split(":")[2]
+    return modified[4] + str(time.strptime(modified[1],'%b').tm_mon) + modified[2] + modified[3].split(":")[0] + modified[3].split(":")[1] + modified[3].split(":")[2]
 
 
 def send_all_files_of_user(user_code, connection):
