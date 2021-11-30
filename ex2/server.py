@@ -143,7 +143,7 @@ def get_command(connection):
         path = data.split(":", 1)[1]
         user_code = add_new_user(path)
         copy_files_from_user(user_code, connection)
-        connection.send(bytes(user_code))
+        connection.send(bytes(user_code,"utf-8"))
         time.sleep(0.1)
     if (command == "old user") :
         user_code = data.split(":")[1]
