@@ -107,12 +107,12 @@ def send_all_files_of_user(user_code, connection):
                 connection.sendall("file:".encode('utf-8')
                 + (path + "/" + file).encode('utf-8') + (":"
                 + get_date_of_file(path + "/" + file)).encode('utf-8'))
-                time.sleep(1)
+                time.sleep(0.1)
             for folder in folders:
                 connection.send("directory:".encode('utf-8') + (path + folder).encode('utf-8'))
-                time.sleep(1)
+                time.sleep(0.1)
         connection.send("all files sended".encode('utf-8'))
-        time.sleep(1)
+        time.sleep(0.1)
     else :
      print("no such user")
 
@@ -122,10 +122,10 @@ def send_file(user_code, connection, path):
     data = f.read(1024)
     while data:
         connection.sendall(bytes(data,"utf-8"))
-        time.sleep(1)
+        time.sleep(0.1)
         data = f.read(1024)
     connection.send(bytes("End of File","utf-8"))
-    time.sleep(1)
+    time.sleep(0.1)
 
 def delete_folder(user_code, path):
     os.rmdir(USER_PATH + "/" + user_code + "/" + path)
@@ -143,6 +143,8 @@ def get_command(connection):
         path = data.split(":", 1)[1]
         user_code = add_new_user(path)
         copy_files_from_user(user_code, connection)
+        connection.send(bytes(user_code))
+        time.sleep(0.1)
     if (command == "old user") :
         user_code = data.split(":")[1]
         command = data.split(":")[2]
