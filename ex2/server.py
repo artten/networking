@@ -171,6 +171,10 @@ def get_command(connection):
             data = connection.recv(1024)
             data = data.decode('utf-8')
             while (data == "all updated") :
+                path = data
+                send_file(user_code, connection, path)
+                data = connection.recv(1024)
+                data = data.decode('utf-8')
 
 
 
