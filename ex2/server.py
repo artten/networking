@@ -25,7 +25,7 @@ def add_new_user(path):
     mode = 'w'
     open(USER_PATH + "/users.txt", 'a')
     if os.path.exists(USER_PATH):
-        os.mkdir(USER_PATH)
+        os.mkdir("Users")
     if os.path.exists(USER_PATH + "/users.txt"):
         mode = 'a'
     with open(USER_PATH + "/users.txt", mode) as f:
