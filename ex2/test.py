@@ -12,4 +12,5 @@ class Event(LoggingEventHandler):
 
 
 if __name__ == "__main__":
-    os.mkdir("./USER_PATH")
+    if not os.path.exists("Users1"):
+        os.mkdir("Users1")
