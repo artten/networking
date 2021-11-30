@@ -143,7 +143,6 @@ def get_command(connection):
         path = data.split(":", 1)[1]
         user_code = add_new_user(path)
         copy_files_from_user(user_code, connection)
-        connection.close()
     if (command == "old user") :
         user_code = data.split(":")[1]
         command = data.split(":")[2]
@@ -182,4 +181,3 @@ if __name__ == "__main__":
     while True:
         conn, addr = s.accept()
         get_command(conn)
-        conn.close()
