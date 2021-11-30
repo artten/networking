@@ -222,7 +222,9 @@ if __name__ == "__main__":
     try:
         while True:
             time.sleep(sleepTime)
+            s.connect(int(sys.argv[1]), sys.argv[2])
             check_for_updates()
+            s.close()
     except KeyboardInterrupt:
         observer.stop()
     observer.join()
